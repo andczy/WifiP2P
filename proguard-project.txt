@@ -1,0 +1,75 @@
+# To enable ProGuard in your project, edit project.properties
+# to define the proguard.config property as described in that file.
+#
+# Add project specific ProGuard rules here.
+# By default, the flags in this file are appended to flags specified
+# in ${sdk.dir}/tools/proguard/proguard-android.txt
+# You can edit the include path and order by changing the ProGuard
+# include property in project.properties.
+#
+# For more details, see
+#   http://developer.android.com/guide/developing/tools/proguard.html
+
+# Add any project specific keep options here:
+
+# If your project uses WebView with JS, uncomment the following
+# and specify the fully qualified class name to the JavaScript interface
+# class:
+-keepclassmembers class fqcn.of.javascript.interface.for.webview {
+   public *;
+}
+-libraryjars /libs/commons-lang3-3.3.2.jar
+-libraryjars /libs/android-async-http-1.4.6.jar
+-libraryjars /libs/avoscloud-v2.6.9.4.jar
+-libraryjars /libs/avosstatistics-v2.6.9.4.jar
+-libraryjars /libs/download.jar
+-libraryjars /libs/httpmime-4.2.4.jar
+-libraryjars /libs/log-1.0.4.jar
+-libraryjars /libs/multithread-1.0.jar
+-libraryjars /libs/javax.persistence-2.0.3.jar
+
+-dontwarn com.jcraft.jzlib.**
+-keep class com.jcraft.jzlib.**  { *;}
+
+-dontwarn sun.misc.**
+-keep class sun.misc.** { *;}
+
+-dontwarn sun.security.**
+-keep class sun.security.** { *; }
+
+-dontwarn com.google.**
+-keep class com.google.** { *;}
+
+-dontwarn com.avos.**
+-keep class com.avos.** { *;}
+
+
+
+-dontwarn org.apache.**
+-keep class org.apache.** { *;}
+
+-dontwarn org.jivesoftware.smack.**
+-keep class org.jivesoftware.smack.** { *;}
+
+-dontwarn com.loopj.**
+-keep class com.loopj.** { *;}
+
+-dontwarn org.xbill.**
+-keep class org.xbill.** { *;}
+
+-dontwarn org.slf4j.**
+-keep class org.slf4j.** { *;}
+
+-dontwarn org.osgi.**
+-keep class org.osgi.** { *;}
+
+-dontwarn javax.persistence.**
+-keep class javax.persistence.** { *;}
+
+-dontwarn com.j256.**
+-keep class com.j256.** { *;}
+
+-dontwarn com.github.**
+-keep class com.github.** { *;}
+
+-keepattributes *Annotation*

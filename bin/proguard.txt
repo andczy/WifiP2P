@@ -1,0 +1,12 @@
+# view AndroidManifest.xml #generated:21
+-keep class com.czy.wifiap.App { <init>(...); }
+
+# view AndroidManifest.xml #generated:45
+-keep class com.czy.wifiap.ListDirActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:27
+-keep class com.czy.wifiap.MainActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:36
+-keep class com.czy.wifiap.WifiAPActivity { <init>(...); }
+

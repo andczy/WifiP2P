@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="line_color">#d4d3d3</color>
+    <color name="top_color">#7357dc</color>
+    <color name="white">#ffffff</color>
+    <color name="red">#ee0ba9</color>
+    <color name="bg">#f2f2f2</color>
+    <color name="green">#43bc84</color>
+    <color name="translate">#ffffffff</color>
+    <color name = "black66">#666666</color>
+</resources>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <RelativeLayout 
+        android:id="@+id/top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/top_color"
+        android:orientation="horizontal">
+        <TextView 
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="上层目录"
+            android:textColor="@color/white"
+            android:drawableLeft="@drawable/title_text_left"
+            android:layout_marginLeft="6dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"/>
+        <TextView 
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择共享目录"
+            android:textColor="@color/white"
+            android:layout_centerInParent="true"
+            />
+    </RelativeLayout>
+	<ListView android:id="@+id/choose_dir_list"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:divider="@color/red"
+	    android:dividerHeight="1px"
+	    android:layout_below="@id/top"
+	    android:cacheColorHint="@color/translate"></ListView>
+
+	<TextView
+	    android:id="@+id/choose_dir_ok"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentBottom="true"
+	    android:background="#ee43bc84"
+	    android:gravity="center"
+	    android:paddingBottom="12dp"
+	    android:paddingTop="12dp"
+	    android:textSize="18sp"
+	    android:text="确  定"
+	    android:textColor="@color/red" />
+
+</RelativeLayout>
