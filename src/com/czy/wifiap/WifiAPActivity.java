@@ -409,9 +409,7 @@ public class WifiAPActivity extends BaseActivity {
                     configHttpServer();
                 }
             }
-
         }
-
     }
 
     private static String int2Ip(int ip) {
