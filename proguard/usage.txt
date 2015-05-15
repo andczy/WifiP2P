@@ -1383,7 +1383,8 @@ com.czy.wifiap.Response:
     private static final java.lang.String FILE_FILE
     private static final java.lang.String SEARCH_LABEL
     private static final java.lang.String APK_FILE
-    324:335:private java.lang.String getPictureHtml(java.util.List)
+    private static final java.lang.String DOWNLOAD_URL
+    333:344:private java.lang.String getPictureHtml(java.util.List)
 com.czy.wifiap.WifiAPActivity:
     public static final java.lang.String SSID
     private static final java.lang.String INT_PRIVATE_KEY

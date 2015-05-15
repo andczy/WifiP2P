@@ -5338,11 +5338,12 @@ com.czy.wifiap.Response -> com.czy.wifiap.n:
     java.lang.String getFileContentType(java.lang.String) -> d
     java.lang.String getChineseHttpPath(java.lang.String) -> e
     boolean isBitmapFile(java.lang.String) -> f
-    void writeFileHtml(java.io.FileInputStream,java.io.File) -> a
+    void writeFileHtml(java.io.FileInputStream,java.io.File,boolean) -> a
     void receiveFile() -> b
     java.io.ByteArrayOutputStream getApkIconStream(android.graphics.drawable.Drawable) -> a
     android.graphics.drawable.Drawable showUninstallAPKIcon(java.lang.String) -> g
     void sendStaticResource() -> a
+    java.util.List searchDir(java.lang.String,java.io.File[],java.util.List) -> a
     void sendSearchHtml(java.lang.String) -> h
 com.czy.wifiap.Response$1 -> com.czy.wifiap.o:
     int compare(java.io.File,java.io.File) -> a

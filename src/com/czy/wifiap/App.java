@@ -11,8 +11,8 @@ public class App extends Application{
 	private static App instance ;
 	public void onCreate(){
 		super.onCreate() ;
-		AVOSCloud.initialize(this, "2mzxv7uzx5x8tish64t66sdi5anbw2s1h06fwja22u4jbe88"
-				, "x9p3mdmyt86z6vwf4b156d3en6q4tczx0dxjiega6ov7n6vk");
+		AVOSCloud.initialize(this, "h2we2ys1spxqq9ol3m1uyn4c77ntfz5wmaq2pxqenxnvwme1"
+				, "k8ennd1dkpmvbv9vuvi5hkd6whyby1pa7qmqx1c8cjft0c5m");
 		AVAnalytics.enableCrashReport(this, true);
 		AVAnalytics.setSessionContinueMillis(60 * 1000);
 		instance = this ;

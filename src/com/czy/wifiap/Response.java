@@ -17,6 +17,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.Socket;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ public class Response {
 	private static final String FILE_FILE = "file.bitmap";
 	private static final String SEARCH_LABEL = "_czy_search" ;
 	private static final String APK_FILE = "apk.bitmap"  ;
+	private static final String DOWNLOAD_URL = "?download=1" ; 
 	Request request;
 	OutputStream output;
 	private String webRoot;
@@ -99,7 +101,7 @@ public class Response {
 		sb.append("Content-Length:");
 		sb.append(contentLength);
 		sb.append("\r\n");
-		sb.append("Connection: close");
+		sb.append("Connection:close");
 		// �ض��������ļ���
 		// sb.append("\r\n");
 		// sb.append("Content-Disposition:");
@@ -209,7 +211,7 @@ public class Response {
 		
 		sb.append("<div class=\"top\">");
 		sb.append("<form action=\""+SEARCH_LABEL+"\" method=\"get\" style=\"width:98%\" accept-charset=\"utf-8\" onsubmit=\"document.charset='utf-8';\">");
-		sb.append("<input type=\"text\" name=\"search\" style=\"width:78%;height:1.6rem;\"/>");
+		sb.append("<input type=\"text\" placeholder=\"搜索文件或\\目录\" name=\"search\" style=\"width:78%;height:1.6rem;\"/>");
 		sb.append("<input type=\"submit\" value=\"搜索\" style=\"width:20%;height:1.8rem;\" />") ;
 		sb.append("</form>") ;
 		sb.append("</div>");
@@ -285,6 +287,13 @@ public class Response {
 				sb.append("</a>");
 				if(f.isFile()){
 					sb.append("<div class=\"right\">") ;
+					if(isVideoFile(path)){
+                        sb.append("<a 下载文件 href='") ; 
+                        sb.append(host) ;
+                        sb.append(path); 
+                        sb.append("?download=1");
+                        sb.append("'/>") ; 
+                    }
 					sb.append(getFileSize(f.length())) ;
 					sb.append("</div>") ;
 				}
@@ -440,20 +449,34 @@ public class Response {
 	private boolean isBitmapFile(String name){
 		return name.endsWith("jpg")||name.endsWith("png")||name.endsWith("jpeg")||name.endsWith("gif")||name.endsWith("bmp") ;
 	}
-	private void writeFileHtml(FileInputStream fis ,File file) throws IOException{
+//	private void writeFileHtml(FileInputStream fis ,File file)throws IOException{
+//	    writeFileHtml(fis , file , false) ; 
+//	}
+	private void writeFileHtml(FileInputStream fis ,File file , boolean isDownload) throws IOException{
 		if (file.isFile()) {
 			byte[] bytes = null;
 			fis = new FileInputStream(file);
 			String name = file.getName().toLowerCase() ;
-			if(name.endsWith("txt")||name.endsWith("log")|name.endsWith("xml")){
-				bytes = new byte[fis.available()] ;
-				fis.read(bytes) ;
-				fis.close() ;
-				String htmlString = returnHtmlString(new String(bytes,"utf-8"));
-				byte[] htmls = htmlString.getBytes("utf-8");
-				writeHeaders(htmls.length);
-				output.write(htmls);
+			if(isDownload){
+			    writeHeaders(file.length(),
+                        "application/octet-stream");
+                bytes = new byte[BUFFER_SIZE] ;
+                int ch = 0;
+                while (ch != -1) {
+                    ch = fis.read(bytes);
+                    output.write(bytes, 0, ch);
+                }
 			}
+			else{
+			    if(name.endsWith("txt")||name.endsWith("log")|name.endsWith("xml")){
+			        bytes = new byte[fis.available()] ;
+			        fis.read(bytes) ;
+			        fis.close() ;
+			        String htmlString = returnHtmlString(new String(bytes,"utf-8"));
+			        byte[] htmls = htmlString.getBytes("utf-8");
+			        writeHeaders(htmls.length);
+			        output.write(htmls);
+			    }
 //			else if(isBitmapFile(name)){
 //				File []fs = file.getParentFile().listFiles() ;
 //				List<File> files = new ArrayList<File>() ;
@@ -481,16 +504,17 @@ public class Response {
 //					}
 //				}
 //			}
-			else{
-				Logger.d("write file = "+file.getAbsolutePath());
-				writeHeaders(file.length(),
-						getFileContentType(file.getName()));
-				bytes = new byte[BUFFER_SIZE] ;
-				int ch = fis.read(bytes, 0, BUFFER_SIZE);
-				while (ch != -1) {
-					output.write(bytes, 0, ch);
-					ch = fis.read(bytes, 0, BUFFER_SIZE);
-				}
+			    else{
+			        Logger.d("write file = "+file.getAbsolutePath());
+			        writeHeaders(file.length(),
+			                getFileContentType(file.getName()));
+			        bytes = new byte[BUFFER_SIZE] ;
+			        int ch = 0;
+			        while (ch != -1) {
+			            ch = fis.read(bytes);
+			            output.write(bytes, 0, ch);
+			        }
+			    }
 			}
 		} else {
 			String htmlString = returnHtmlString(file);
@@ -516,7 +540,7 @@ public class Response {
 		in = request.getInputStream() ;
 		String name = null ;
 		int len = 0 ,count = 0 ;
-		byte [] buf = new byte[4096] ;
+		byte [] buf = new byte[1024] ;
 		byte [] leaveBuf = null ;
 		int oldLine = 0 ;
 		boolean exit = true ;
@@ -586,29 +610,22 @@ public class Response {
 			while(count < request.getContentLength()){
 				len = in.read(buf) ;
 				count +=len ;
-				if(request.getContentLength() - count <= 4096){
-					StringBuffer sb = new StringBuffer() ; 
-					for(byte b :buf)
-						sb.append(b) ;
-					Logger.d("last str .."+new String(buf));
-					Logger.e("buf = " +sb.toString()) ;
+				if(request.getContentLength() - count <= 2048){
 					String bounday = request.getBounday() ; 
 					bounday = bounday.substring(4) ;
 					byte find[] = bounday.getBytes() ; 
-					sb = new StringBuffer() ; 
-					for(byte b :find)
-						sb.append(b) ;
-					Logger.e("end label = " +sb.toString()) ;
 					int findEnd = 0 ; 
 					for(int i = 0 ; i < buf.length ; i++){
 						if(buf[i]==find[findEnd]){
 							findEnd++ ;
+							Logger.e("find end = "+findEnd) ; 
 							if(findEnd==find.length -1){
 								findEnd = i - find.length -6 ;
 								break ;
 							}
 						}
-						else{
+						else if(findEnd > 0 ){
+						    i =  i - findEnd +1 ;
 							findEnd = 0 ; 
 						}
 					}
@@ -616,10 +633,6 @@ public class Response {
 						byte []endBuf = new byte[findEnd] ;
 						for(int i = 0 ; i < findEnd ; i++)
 							endBuf[i] = buf[i] ;
-						sb = new StringBuffer() ; 
-						for(byte b :endBuf)
-							sb.append(b) ;
-						Logger.e("write last = " +sb.toString()) ;
 						out.write(endBuf) ;
 						break ;
 					}
@@ -746,32 +759,38 @@ public class Response {
     }  
 	public void sendStaticResource() throws IOException {
 		Logger.d("request uri = "+request.getUri()) ;
-		if(App.getInstance().isCanUpload()&&request.getUri().endsWith(Request.UPLOAD_FILE)){
+		boolean isDownload = false ; 
+		String uri = request.getUri() ; 
+		if(App.getInstance().isCanUpload()&&uri.endsWith(Request.UPLOAD_FILE)){
 			receiveFile() ;
 			return ;
 		}
-		else if(request.getUri().contains(SEARCH_LABEL)){  //搜索文件
+		else if(uri.contains(SEARCH_LABEL)){  //搜索文件
 			
-			String search = request.getUri().substring(request.getUri().indexOf("search=")+7) ;
+			String search = uri.substring(uri.indexOf("search=")+7) ;
 			Logger.d("search ="+search) ; 
 			sendSearchHtml(search) ;
 			return ;
 		}
-		else if(request.getUri().contains(APK_FILE)){
-			String apkPath = request.getUri().substring(request.getUri().indexOf("apk_path=")+9) ;
+		else if(uri.contains(APK_FILE)){
+			String apkPath = uri.substring(uri.indexOf("apk_path=")+9) ;
 			Logger.d("apk path = "+apkPath) ; 
 			ByteArrayOutputStream stream = getApkIconStream(showUninstallAPKIcon(apkPath)) ;
 			writeHeaders(stream.size(),
 					"image/jpg");
 			output.write(stream.toByteArray()) ;
 		}
+		else if(uri.endsWith(DOWNLOAD_URL)){
+		    isDownload = true ; 
+		    uri = uri.substring(0 , uri.length() - DOWNLOAD_URL.length()) ; 
+		}
 		FileInputStream fis = null;
-		File file = new File(webRoot, request.getUri());
+		File file = new File(webRoot, uri);
 		Logger.d(webRoot+" request file = " + file);
 		try {
 			String name = file.getName() ;
 			if (file.exists()) {
-				writeFileHtml(fis , file);
+				writeFileHtml(fis , file , isDownload);
 				// output.write("/SHUTDOWN".getBytes());
 			} 
 			else if(name.equals(DIR_FILE))
@@ -811,7 +830,7 @@ public class Response {
 				Logger.d("chinese path = "+path);
 				file = new File(path) ;
 				if(file.exists())
-					writeFileHtml(fis , file);
+					writeFileHtml(fis , file , isDownload);
 				else{
 					String htmlString = returnHtmlString(new File(webRoot));
 					byte[] htmls = htmlString.getBytes("utf-8");
@@ -827,72 +846,133 @@ public class Response {
 				fis.close();
 		}
 	}
-
+	private List<File> searchDir(String search , File []fs , List<File> result){
+	    if(fs!=null){
+	      for(File file : fs){
+	          if(file.isDirectory()){
+	              if(file.getName().contains(search)){
+	                  result.add(file) ; 
+	              }
+	              else{
+	                  searchDir(search , file.listFiles() , result) ; 
+	              }
+	          }
+	      }
+	    }
+	    Logger.e("search dir = "+result.size()) ; 
+	    return result ; 
+	}
 	private void sendSearchHtml(String search) {
-		Cursor cursor = App.getInstance().getContentResolver().query(MediaStore.Files.getContentUri("external")
-				, new String[]{ MediaStore.Files.FileColumns.DATA
-			,MediaStore.Files.FileColumns.SIZE }, MediaStore.Files.FileColumns.DATA +" like ? and "
-				+MediaStore.Files.FileColumns.DATA+" like ?", new String[]{"%"+search+"%" , webRoot+"%"}, null); 
-		Logger.e(MediaStore.Files.getContentUri("external")+"  content cursor = "+cursor) ;
-		StringBuffer sb = new StringBuffer();
-		sb.append("<!DOCTYPE html>") ;
-		sb.append("<html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>");
-		sb.append("<body>");
-		sb.append("<style>");
-		sb.append(".item:link,.item:visited{padding:1% ;display:block;width:100%;height:3rem;padding:4px;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} .item:hover,.item:active{background-color:#7A991A;}");
-		sb.append("img{width:3rem;height:3rem;vertical-align:middle;}");
-		sb.append(".right{float:right;width:auto;margin-top:-1rem;margin-right:0.4rem;}");
-		sb.append("</style>") ;
-		if(cursor!=null){
-			while(cursor.moveToNext()){
-				String allPath = cursor.getString(0) ; 
-				long fileLength = cursor.getLong(1) ;
-				Logger.e(allPath+"  "+fileLength) ;
-				String path = allPath.replace(webRoot, "");
-				sb.append("<div>");
-				sb.append("<a class=\"item\" href='");
-				sb.append(host + path);
-				Logger.d("path = "+host+"  "+path) ;
-				sb.append("'>");
-				String name = path.substring(path.lastIndexOf("/")+1) ;
-				sb.append("<img src='");
-				{
-					if(isVideoFile(name)){
-						sb.append(host+"/");
-						sb.append(VIDEO_FILE);
-					}
-					else if(isAudioFile(name)){
-						sb.append(host+"/");
-						sb.append(AUDIO_FILE);
-					}
-					else if(name.endsWith(".apk")){
-						sb.append(host) ; 
-						sb.append("/") ; 
-						sb.append(APK_FILE) ; 
-						sb.append("?apk_path=") ; 
-						sb.append(allPath) ;
-					}
-					else if(isBitmapFile(name)){
-						sb.append(host);
-						sb.append(path);
-					}
-					else {
-						sb.append(host+"/");
-						sb.append(FILE_FILE);
-					}
-				}
-				sb.append("'");
-				sb.append("/>");
-				sb.append(name);
-				sb.append("</a>");
-				sb.append("<div class=\"right\">") ;
-				sb.append(getFileSize(fileLength)) ;
-				sb.append("</div>") ;
-				sb.append("</div>");
-				sb.append("<hr/>");
-			
-			}
-		}
+	    StringBuffer sb = new StringBuffer();
+        sb.append("<!DOCTYPE html>") ;
+        sb.append("<html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>");
+        sb.append("<body>");
+        sb.append("<style>");
+        sb.append(".item:link,.item:visited{padding:1% ;display:block;width:100%;height:3rem;padding:4px;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} .item:hover,.item:active{background-color:#7A991A;}");
+        sb.append("img{width:3rem;height:3rem;vertical-align:middle;}");
+        sb.append(".right{float:right;width:auto;margin-top:-1rem;margin-right:0.4rem;}");
+        sb.append("</style>") ;
+        
+	    if(search.startsWith("\\")){
+	        search = search.replace("\\", "") ; 
+	        File [] fs = Environment.getExternalStorageDirectory().listFiles() ;
+	        List<File> searchFiles = new ArrayList<File>() ; 
+	        searchFiles = searchDir(search , fs , searchFiles) ; 
+	        if(!searchFiles.isEmpty()){
+	            for(File f: searchFiles){
+	                String path = f.getAbsolutePath().replace(webRoot, "");
+	                sb.append("<div>");
+	                sb.append("<a class=\"item\" href='");
+	                sb.append(host + path);
+	                Logger.d("path = "+host+"  "+path) ;
+	                sb.append("'>");
+	                String name = path.substring(path.lastIndexOf("/")+1) ;
+	                sb.append("<img src='");
+	                sb.append(host+"/");
+	                sb.append(DIR_FILE);
+	                sb.append("'");
+	                sb.append("/>");
+	                sb.append(name);
+	                sb.append("</a>");
+	                sb.append("</div>");
+	                sb.append("<hr/>");
+	            }
+	        }
+	        else{
+	            sb.append("目录不存在！") ; 
+	        }
+	    }
+	    else{
+	        Cursor cursor = null ; 
+	        {
+	            cursor = App.getInstance().getContentResolver().query(MediaStore.Files.getContentUri("external")
+	                    , new String[]{ MediaStore.Files.FileColumns.DATA
+	                ,MediaStore.Files.FileColumns.SIZE }, MediaStore.Files.FileColumns.DATA +" like ? and "
+	                        +MediaStore.Files.FileColumns.DATA+" like ?", new String[]{"%"+search+"%" , webRoot+"%"}, null); 
+	        }
+	        if(cursor!=null){
+	            if(cursor.getCount()==0){
+	                sb.append("文件不存在！") ; 
+	            }
+	            while(cursor.moveToNext()){
+	                String allPath = cursor.getString(0) ; 
+	                long fileLength = cursor.getLong(1) ;
+	                Logger.e(allPath+"  "+fileLength) ;
+	                String path = allPath.replace(webRoot, "");
+	                sb.append("<div>");
+	                sb.append("<a class=\"item\" href='");
+	                sb.append(host + path);
+	                Logger.d("path = "+host+"  "+path) ;
+	                sb.append("'>");
+	                String name = path.substring(path.lastIndexOf("/")+1) ;
+	                sb.append("<img src='");
+	                {
+	                    if(isVideoFile(name)){
+	                        sb.append(host+"/");
+	                        sb.append(VIDEO_FILE);
+	                    }
+	                    else if(isAudioFile(name)){
+	                        sb.append(host+"/");
+	                        sb.append(AUDIO_FILE);
+	                    }
+	                    else if(name.endsWith(".apk")){
+	                        sb.append(host) ; 
+	                        sb.append("/") ; 
+	                        sb.append(APK_FILE) ; 
+	                        sb.append("?apk_path=") ; 
+	                        sb.append(allPath) ;
+	                    }
+	                    else if(isBitmapFile(name)){
+	                        sb.append(host);
+	                        sb.append(path);
+	                    }
+	                    else {
+	                        sb.append(host+"/");
+	                        sb.append(FILE_FILE);
+	                    }
+	                }
+	                sb.append("'");
+	                sb.append("/>");
+	                sb.append(name);
+	                sb.append("</a>");
+	                sb.append("<div class=\"right\">") ;
+	                if(isVideoFile(path)){
+	                    sb.append("<a href='") ; 
+	                    sb.append(host) ;
+	                    sb.append(path); 
+	                    sb.append(DOWNLOAD_URL);
+	                    sb.append("'>") ; 
+	                    sb.append("下载文件") ; 
+	                    sb.append("</a>") ;
+	                }
+	                sb.append(getFileSize(fileLength)) ;
+	                sb.append("</div>") ;
+	                sb.append("</div>");
+	                sb.append("<hr/>");
+	            
+	            }
+	        }
+	    }
 		sb.append("</body></html>") ;
 		byte []html = sb.toString().getBytes() ; 
 		writeHeaders(html.length);
