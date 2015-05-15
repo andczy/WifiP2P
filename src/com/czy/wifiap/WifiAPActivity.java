@@ -380,18 +380,8 @@ public class WifiAPActivity extends BaseActivity {
 
     private void startShare() {
         {
-            ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE) ; 
-            NetworkInfo info = cm.getActiveNetworkInfo() ; 
-            String ssid = info.getExtraInfo();
-            if (webRoot == null) {
-                if (hasSD()) {
-                    webRoot = Environment.getExternalStorageDirectory().getAbsolutePath();
-                } else {
-                    Toast.makeText(this, "未找到存储卡", Toast.LENGTH_LONG).show();
-                    return;
-                }
-            }
-            info.
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo() ; 
+            String ssid = wifiInfo.getBSSID() ; 
             TextView shareDir = (TextView)findViewById(R.id.current_share_dir);
             shareDir.setText(getString(R.string.current_share_dir, webRoot));
             httpServer = new HttpServer(webRoot, dirBytes);
