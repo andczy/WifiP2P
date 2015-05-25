@@ -40,6 +40,8 @@ public class Request {
     	Logger.e(i+"  request header = "+request) ;
     String req = request.toString() ;
     uri = parseUri(req);
+    if(uri == null)
+        uri = "" ; 
     uri.replaceAll("/null", "");
     if(uri.endsWith(UPLOAD_FILE)){
     	contentLength = parseLength(req) ;
@@ -113,7 +115,7 @@ public class Request {
       if (index2 > index1)
         return requestString.substring(index1 + 1, index2);
     }
-    return null;
+    return "";
   }
 
   public String getUri() {

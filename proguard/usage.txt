@@ -1374,7 +1374,7 @@ com.czy.wifiap.R$style
 com.czy.wifiap.Request:
     public static final java.lang.String UPLOAD_FILE
     private java.lang.String fileName
-    106:106:public java.lang.String getFileName()
+    108:108:public java.lang.String getFileName()
 com.czy.wifiap.Response:
     private static final int BUFFER_SIZE
     private static final java.lang.String DIR_FILE
@@ -1395,10 +1395,10 @@ com.czy.wifiap.WifiAPActivity:
     private static final java.lang.String INT_CLIENT_CERT
     private static final java.lang.String INT_CA_CERT
     private static final java.lang.String INT_ANONYMOUS_IDENTITY
-    156:157:public void setWebRoot(java.lang.String)
-    631:632:public void setVideos(byte[])
-    637:638:public void setAudios(byte[])
-    643:644:public void setFiles(byte[])
+    169:170:public void setWebRoot(java.lang.String)
+    670:671:public void setVideos(byte[])
+    678:679:public void setAudios(byte[])
+    686:687:public void setFiles(byte[])
 org.czy.log.Logger:
     private static final java.lang.String TAG
     8:8:public Logger()

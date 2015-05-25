@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +48,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -377,20 +380,59 @@ public class WifiAPActivity extends BaseActivity {
             }
         }
     }
-
+    /**
+     * Convert a IPv4 address from an InetAddress to an integer
+     * @param inetAddr is an InetAddress corresponding to the IPv4 address
+     * @return the IP address as an integer in network byte order
+     */
+    public static int inetAddressToInt(Inet4Address inetAddr)
+            throws IllegalArgumentException {
+        byte [] addr = inetAddr.getAddress();
+        return ((addr[3] & 0xff) << 24) | ((addr[2] & 0xff) << 16) |
+                ((addr[1] & 0xff) << 8) | (addr[0] & 0xff);
+    }
     private void startShare() {
-        {
+        if(!hasSD()){
+            Toast.makeText(this, "没有检测到存储卡，无法共享！", Toast.LENGTH_LONG).show() ; 
+        }
+        else{
             WifiInfo wifiInfo = wifiManager.getConnectionInfo() ; 
-            String ssid = wifiInfo.getBSSID() ; 
+            String ssid = wifiInfo.getSSID() ; 
             TextView shareDir = (TextView)findViewById(R.id.current_share_dir);
+            webRoot = Environment.getExternalStorageDirectory().getAbsolutePath();
             shareDir.setText(getString(R.string.current_share_dir, webRoot));
             httpServer = new HttpServer(webRoot, dirBytes);
             TextView serverIP = (TextView)findViewById(R.id.share_ap_ip);
             TextView connectInfo = (TextView)findViewById(R.id.connect_info);
-            if (wifiInfo.getIpAddress() != 0 && wifiInfo.getNetworkId() != 0) {
+            if (!TextUtils.isEmpty(wifiInfo.getBSSID())) {
                 connectInfo.setText(getString(R.string.to_connect, ssid));
-                String ip = int2Ip(wifiInfo.getIpAddress()) + ":8080";
-                host = "http://" + ip;
+                if(wifiInfo.getIpAddress()==0){
+                    Class cls;
+                    try {
+                        cls = Class.forName(wifiInfo.getClass().toString());
+                        Field field = cls.getField("mIpAddress") ; 
+                        if(field != null){
+                            field.setAccessible(true) ; 
+                            Inet4Address ipNet = (Inet4Address)field.get(wifiInfo) ; 
+                            int ipInt = inetAddressToInt(ipNet);
+                            host = "http://" + int2Ip(ipInt) +":8080";
+                        }
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchFieldException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (IllegalArgumentException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } 
+                }
+                else{
+                    String ip = int2Ip(wifiInfo.getIpAddress()) + ":8080";
+                    host = "http://" + ip;
+                }
+                
                 serverIP.setText(host);
                 httpServer.setHost(host);
                 new Thread() {
@@ -408,6 +450,7 @@ public class WifiAPActivity extends BaseActivity {
                 if (wifiAp) {
                     configHttpServer();
                 }
+                
             }
         }
     }
@@ -560,7 +603,7 @@ public class WifiAPActivity extends BaseActivity {
             TextView shareDir = (TextView)findViewById(R.id.current_share_dir);
             webRoot = data.getStringExtra(ListDirActivity.EXTRA_DIR);
             if (webRoot == null && hasSD()) {
-                webRoot = Environment.getExternalStorageState();
+                webRoot = Environment.getExternalStorageDirectory().getAbsolutePath();
             }
             shareDir.setText(getString(R.string.current_share_dir, webRoot));
             if (httpServer != null) {
